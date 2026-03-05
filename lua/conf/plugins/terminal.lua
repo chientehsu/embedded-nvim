@@ -2,6 +2,11 @@ return {
   "akinsho/toggleterm.nvim",
   version = "*",
   config = function()
+    -- Get your Home folder dynamically
+    local home = os.getenv("USERPROFILE") or os.getenv("HOME")
+    local project_dir = home .. "\\FLUX"
+
+
     require("toggleterm").setup({
       size = function(term)
         if term.direction == "vertical" then
@@ -19,6 +24,9 @@ return {
       direction = "vertical", -- This creates the "split" at the bottom
       close_on_exit = true,
       shell = "powershell.exe",   -- Ensures it uses Windows PowerShell
+
+
+      dir = project_dir,
     })
   end,
 }
