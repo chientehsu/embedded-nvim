@@ -1,5 +1,4 @@
 require "conf"
--- Fix Neovide starting in Program Files
 if vim.g.neovide then
     vim.api.nvim_create_autocmd("VimEnter", {
         callback = function()
