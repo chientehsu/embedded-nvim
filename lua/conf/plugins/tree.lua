@@ -114,15 +114,15 @@ return {
     })
 
     -- ============================================================
-    -- DEFAULT DIRECTORY: Start in FLUX project
+    -- DEFAULT DIRECTORY: Start in command_access project
     -- 
     -- Dynamic path that works on Windows and Linux
-    -- Gets your home directory and appends FLUX folder
+    -- Gets your home directory and appends command_access folder
     -- Works for anyone, not just hardcoded to one user
     -- ============================================================
     local home = os.getenv("USERPROFILE") or os.getenv("HOME")
-    local flux_dir = home .. (vim.fn.has("win32") == 1 and "\\FLUX" or "/FLUX")
-    vim.cmd("cd " .. flux_dir)
+    local command_access_dir = home .. "/software_projects/command_access"
+    vim.cmd("cd " .. command_access_dir)
 
     -- ============================================================
     -- KEYBIND: Toggle file tree open/close

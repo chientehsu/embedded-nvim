@@ -270,12 +270,30 @@ local function smart_build()
             end
 
             if is_avr then
-                print("🔨 Compiling AVR Code (Generating .elf and .hex)...")
-                local full_cmd = string.format(
-                    "cd '%s' ; avr-gcc -Wall -Os -mmcu=attiny85 -o %s.elf %s ; avr-objcopy -j .text -j .data -O ihex %s.elf %s.hex",
-                    file_dir, file_name, file_path, file_name, file_name
-                )
-                require("toggleterm").exec(full_cmd)
+                -- Look at global memory to see if we have a saved AVR revision name
+                local default_prompt = _G.last_avr_rev and (" (default: " .. _G.last_avr_rev .. "): ") or " (or press Enter for standard): "
+                
+                vim.ui.input({ prompt = 'Enter AVR Build Name' .. default_prompt }, function(rev_name)
+                    if rev_name and rev_name ~= "" then
+                        _G.last_avr_rev = rev_name
+                    end
+                    
+                    local target_name = rev_name
+                    if not target_name or target_name == "" then
+                        target_name = _G.last_avr_rev
+                    end
+            
+                    if not target_name or target_name == "" then
+                        target_name = file_name
+                    end
+            
+                    print("🔨 Compiling AVR Code -> " .. target_name .. ".hex ...")
+                    local full_cmd = string.format(
+                        "cd '%s' ; avr-gcc -Wall -Os -mmcu=attiny85 -o %s.elf %s ; avr-objcopy -j .text -j .data -O ihex %s.elf %s.hex",
+                        file_dir, target_name, file_path, target_name, target_name
+                    )
+                    require("toggleterm").exec(full_cmd)
+                end)
             else
                 print("⚙️  Compiling standard C file for PC...")
                 require("toggleterm").exec(string.format("cd '%s' ; gcc -O2 %s -o %s && .\\%s", file_dir, file_full, file_name, file_name))
@@ -350,16 +368,38 @@ vim.keymap.set('n', '<leader>sr', stm32_revision_build, { desc = "Build Custom S
 vim.keymap.set('n', '<leader>af', function()
     local file_path = vim.fn.expand('%:p')
     local file_dir = vim.fn.expand('%:p:h')
-    local file_name = vim.fn.expand('%:t:r')
-    
-    print("🔨 Compiling AVR Code (Generating .elf and .hex)...")
-    
-    -- Compiles the code and turns it into a hex file, but STOPS before flashing
-    local full_cmd = string.format(
-        "cd '%s' ; avr-gcc -Wall -Os -mmcu=attiny85 -o %s.elf %s ; avr-objcopy -j .text -j .data -O ihex %s.elf %s.hex",
-        file_dir, file_name, file_path, file_name, file_name
-    )
-    require("toggleterm").exec(full_cmd)
+    local file_name = vim.fn.expand('%:t:r') -- Defaults to 'main' or whatever the file is called
+
+    -- Look at global memory to see if we have a saved AVR revision name
+    local default_prompt = _G.last_avr_rev and (" (default: " .. _G.last_avr_rev .. "): ") or " (or press Enter for standard): "
+
+    -- Prompt the user
+    vim.ui.input({ prompt = 'Enter AVR Build Name' .. default_prompt }, function(rev_name)
+        -- If they typed a new name, save it to global memory
+        if rev_name and rev_name ~= "" then
+            _G.last_avr_rev = rev_name
+        end
+        
+        -- If they hit Enter (blank), try to load the name from global memory
+        local target_name = rev_name
+        if not target_name or target_name == "" then
+            target_name = _G.last_avr_rev
+        end
+
+        -- If it's STILL blank (first time running it), fall back to the actual file name
+        if not target_name or target_name == "" then
+            target_name = file_name
+        end
+
+        print("🔨 Compiling AVR Code -> " .. target_name .. ".hex ...")
+
+        -- Compiles the code using the new custom target_name for the output files
+        local full_cmd = string.format(
+            "cd '%s' ; avr-gcc -Wall -Os -mmcu=attiny85 -o %s.elf %s ; avr-objcopy -j .text -j .data -O ihex %s.elf %s.hex",
+            file_dir, target_name, file_path, target_name, target_name
+        )
+        require("toggleterm").exec(full_cmd)
+    end)
 end, { desc = "Build AVR" })
 
 -- ============================================================
@@ -471,3 +511,18 @@ vim.keymap.set('n', '<leader>rF', function()
   vim.cmd("!ruff format %")
   vim.cmd("edit!")
 end, { desc = "Ruff Format" })
+
+-- ============================================================
+-- 23. GITHUB COPILOT CHAT
+-- ============================================================
+-- Space + ch toggles the Copilot chat window open and closed (Works in Normal and Visual mode)
+vim.keymap.set({"n", "v"}, "<leader>ch", ":CopilotChatToggle<CR>", { desc = "Copilot: Toggle Chat" })
+
+-- Space + ce asks Copilot to EXPLAIN the code you have highlighted
+vim.keymap.set("v", "<leader>ce", ":CopilotChatExplain<CR>", { desc = "Copilot: Explain Code" })
+
+-- Space + cf asks Copilot to FIX bugs in the code you have highlighted
+vim.keymap.set("v", "<leader>cf", ":CopilotChatFix<CR>", { desc = "Copilot: Fix Bugs" })
+
+-- Space + cr asks Copilot to OPTIMIZE/REFACTOR the code you have highlighted
+vim.keymap.set("v", "<leader>cR", ":CopilotChatOptimize<CR>", { desc = "Copilot: Optimize Code" })
