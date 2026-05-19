@@ -173,6 +173,12 @@ end, { desc = "Run Python Script" })
 -- ============================================================
 local function smart_build()
     vim.cmd("wa") -- Automatically save all open files before building
+	
+	-- WinLibs Toolchain Absolute Paths
+	local WINLIBS_BIN = "C:/Users/ah/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin"
+    local MAKE = WINLIBS_BIN .. "/mingw32-make.exe"
+    local GCC  = WINLIBS_BIN .. "/gcc.exe"
+    local GXX  = WINLIBS_BIN .. "/g++.exe"
     
     -- Gather information about the current file you are looking at
     local file_path = vim.fn.expand('%:p')
@@ -252,13 +258,14 @@ local function smart_build()
             end)
         else
             -- If no .ioc file, it's just a regular C project with a Makefile
-            print("🔨 Building with generic Makefile...")
-            require("toggleterm").exec("cd '" .. root .. "' ; make -j8")
+            print("🔨 Building and running generic Makefile project...")
+            -- We assume the target binary is named 'main.exe' based on our KISS Makefile
+            require("toggleterm").exec("cd '" .. root .. "' ; make clean ; make -j8 && .\\main.exe")
         end
 
     -- 4. SINGLE FILE FALLBACKS (If no build system files are found)
     else
-        if file_ext == "c" then
+        if file_ext == "c" or file_ext == "h" then
             local is_avr = false
             -- Read the first 20 lines of the file to see if AVR headers are included
             local lines = vim.fn.readfile(file_path, '', 20)
@@ -295,16 +302,24 @@ local function smart_build()
                     require("toggleterm").exec(full_cmd)
                 end)
             else
-                print("⚙️  Compiling standard C file for PC...")
-                require("toggleterm").exec(string.format("cd '%s' ; gcc -O2 %s -o %s && .\\%s", file_dir, file_full, file_name, file_name))
+				-- Compile standard c file using C23 using WinLibs
+                print("⚙️  Compiling standard C file via GCC (C23)...")
+                local cmd = string.format("cd '%s' ; gcc -std=c23 -Wall -Wextra -O2 %s -o %s.exe && .\\%s.exe", file_dir, file_full, file_name, file_name)
+				require("toggleterm").exec(cmd)
             end
-
-        elseif file_ext == "cpp" or file_ext == "cc" then
-            print("⚙️  Compiling C++ file...")
-            require("toggleterm").exec(string.format("cd '%s' ; g++ -O2 %s -o %s && .\\%s", file_dir, file_full, file_name, file_name))
+		
+		-- Compile C++ files
+        elseif file_ext == "cpp" or file_ext == "cc" or file_ext == "cxx" or file_ext == "hpp" then
+            print("⚙️  Compiling C++ file via G++ (C++20)...")
+            local cmd = string.format("cd '%s' ; & '%s' -std=c++20 -Wall -Wextra -O2 %s -o %s.exe && .\\%s.exe", file_dir, GXX, file_full, file_name, file_name)
+            require("toggleterm").exec(cmd)
+			
+		-- Compile Python
         elseif file_ext == "py" then
             print("🐍 Running Python...")
             require("toggleterm").exec(string.format("cd '%s' ; python %s", file_dir, file_full))
+		
+		-- Compile Rust
         elseif file_ext == "rs" then
             print("🦀 Running Rust file...")
             require("toggleterm").exec(string.format("cd '%s' ; rustc %s && .\\%s", file_dir, file_full, file_name))

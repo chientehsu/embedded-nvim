@@ -85,15 +85,27 @@ return {
         -- Optimized for embedded development
         -- ============================================================
         ["clangd"] = function()
-          require("lspconfig").clangd.setup({
-            capabilities = capabilities,
-            cmd = {
-              "clangd",
-              "--background-index",
-              "--header-insertion=never",
-              "--query-driver=C:\\Users\\ah\\AVR\\avr8-gnu-toolchain\\bin\\avr-gcc.exe",
-            },
-          })
+		  local winlibs = "C:/Users/ah/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin"
+		  local avr = "C:/Users/ah/AVR/avr8-gnu-toolchain/bin"
+		  local arm = "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/13.3 rel1/bin"
+		  require("lspconfig").clangd.setup({
+		    capabilities = capabilities,
+		    cmd = {
+			  "C:/EngineeringTools/LLVM/bin/clangd.exe",
+			  "--background-index",
+			  "--header-insertion=never",
+			  "--query-driver="
+			  .. winlibs .. "/*gcc*.exe,"
+			  .. avr .. "/*gcc*.exe,"
+			  .. arm .. "/*gcc*.exe",
+		    },
+			
+			init_options = {
+			  fallbackFlags = {
+			    "-fgnuc-version=15", -- Forces Clang's parser to accept GCC 15 extensions
+			  },
+			},
+		  })
         end,
         -- ============================================================
         -- RUST-ANALYZER: For FLUX Runtime
