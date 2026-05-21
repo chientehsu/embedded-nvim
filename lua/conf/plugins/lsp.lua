@@ -86,8 +86,8 @@ return {
         -- ============================================================
         ["clangd"] = function()
 		  local winlibs = "C:/Users/ah/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin"
-		  local avr = "C:/Users/ah/AVR/avr8-gnu-toolchain/bin"
-		  local arm = "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/13.3 rel1/bin"
+		  local avr = "C:/EngineeringTools/AVR/avr8-gnu-toolchain/bin"
+		  local arm = "C:/EngineeringTools/STM32/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin"
 		  require("lspconfig").clangd.setup({
 		    capabilities = capabilities,
 		    cmd = {
@@ -101,9 +101,7 @@ return {
 		    },
 			
 			init_options = {
-			  fallbackFlags = {
-			    "-fgnuc-version=15", -- Forces Clang's parser to accept GCC 15 extensions
-			  },
+			  fallbackFlags = { "-std=c23" },
 			},
 		  })
         end,
