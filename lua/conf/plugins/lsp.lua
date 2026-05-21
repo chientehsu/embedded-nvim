@@ -95,7 +95,7 @@ return {
 			  "--background-index",
 			  "--header-insertion=never",
 			  "--query-driver="
-			  .. winlibs .. "/*gcc*.exe,"
+			  .. winlibs .. "/*gcc*.exe," .. winlibs .. "/*g++*.exe,"
 			  .. avr .. "/*gcc*.exe,"
 			  .. arm .. "/*gcc*.exe",
 		    },
